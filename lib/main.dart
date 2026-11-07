@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'services/app_services.dart';
 
-void main() => runApp(const ReFindApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AppServices.instance.initialize();
+  runApp(const ReFindApp());
+}
 
 const purple = Color(0xFF6055F5);
 const ink = Color(0xFF191B43);
@@ -308,7 +314,19 @@ class AuthPage extends StatefulWidget {
 
 class _AuthPageState extends State<AuthPage> {
   final form = GlobalKey<FormState>();
+  final name = TextEditingController();
+  final email = TextEditingController();
+  final password = TextEditingController();
   bool hidden = true;
+
+  @override
+  void dispose() {
+    name.dispose();
+    email.dispose();
+    password.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(),
@@ -330,6 +348,7 @@ class _AuthPageState extends State<AuthPage> {
           children: [
             if (widget.register) ...[
               TextFormField(
+                controller: name,
                 decoration: const InputDecoration(
                   labelText: 'Full name',
                   prefixIcon: Icon(Icons.person_outline),
@@ -340,6 +359,7 @@ class _AuthPageState extends State<AuthPage> {
               gap(16),
             ],
             TextFormField(
+              controller: email,
               keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
                 labelText: 'Email address',
@@ -352,6 +372,7 @@ class _AuthPageState extends State<AuthPage> {
             ),
             gap(16),
             TextFormField(
+              controller: password,
               obscureText: hidden,
               decoration: InputDecoration(
                 labelText: 'Password',
@@ -370,9 +391,29 @@ class _AuthPageState extends State<AuthPage> {
             ),
             gap(24),
             FilledButton(
-              onPressed: () {
-                if (form.currentState!.validate()) {
-                  go(context, const PermissionsPage());
+              onPressed: () async {
+                if (!form.currentState!.validate()) return;
+                try {
+                  if (AppServices.instance.firebaseReady) {
+                    if (widget.register) {
+                      await AppServices.instance.register(
+                        email.text.trim(),
+                        password.text,
+                        name.text.trim(),
+                      );
+                    } else {
+                      await AppServices.instance.signIn(
+                        email.text.trim(),
+                        password.text,
+                      );
+                    }
+                  }
+                  if (context.mounted) go(context, const PermissionsPage());
+                } on Object catch (error) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(error.toString())));
                 }
               },
               child: Text(widget.register ? 'Create account' : 'Log in'),
@@ -928,6 +969,7 @@ class _ReportPageState extends State<ReportPage> {
   final name = TextEditingController(),
       description = TextEditingController(),
       location = TextEditingController();
+  XFile? photo;
   String category = 'Bags';
   int step = 0;
   @override
@@ -1007,15 +1049,47 @@ class _ReportPageState extends State<ReportPage> {
               ),
               gap(),
               panel(
-                const Row(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.add_a_photo_outlined, color: purple),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Photo uploads will be available when device integration is connected.',
-                        style: TextStyle(color: muted),
-                      ),
+                    const Text(
+                      'Add a photo',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    gap(6),
+                    Text(
+                      photo == null
+                          ? 'Add a clear photo to help identify the item.'
+                          : 'Photo selected: ${photo!.name}',
+                      style: const TextStyle(color: muted),
+                    ),
+                    gap(8),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        OutlinedButton.icon(
+                          onPressed: () async {
+                            final selected = await AppServices.instance
+                                .choosePhoto(ImageSource.camera);
+                            if (selected != null && mounted) {
+                              setState(() => photo = selected);
+                            }
+                          },
+                          icon: const Icon(Icons.camera_alt_outlined),
+                          label: const Text('Camera'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: () async {
+                            final selected = await AppServices.instance
+                                .choosePhoto(ImageSource.gallery);
+                            if (selected != null && mounted) {
+                              setState(() => photo = selected);
+                            }
+                          },
+                          icon: const Icon(Icons.photo_library_outlined),
+                          label: const Text('Photos'),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -1038,7 +1112,24 @@ class _ReportPageState extends State<ReportPage> {
                     (v ?? '').trim().isEmpty ? 'Enter a location' : null,
               ),
               gap(),
-              const LocationPreview(),
+              LocationPreview(
+                onUseCurrentLocation: () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  try {
+                    final position = await AppServices.instance
+                        .currentLocation();
+                    if (!mounted) return;
+                    location.text =
+                        '${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}';
+                    setState(() {});
+                  } on Object catch (error) {
+                    if (!mounted) return;
+                    messenger.showSnackBar(
+                      SnackBar(content: Text(error.toString())),
+                    );
+                  }
+                },
+              ),
               gap(12),
               const Text(
                 'Your typed location will be saved with this report.',
@@ -1076,19 +1167,41 @@ class _ReportPageState extends State<ReportPage> {
               ),
               gap(),
               const Text(
-                'Reports are currently kept in this app session. Publishing and persistence will be connected to the backend.',
+                'Your report will be saved to your account when Firebase is configured.',
                 style: TextStyle(color: muted),
               ),
             ],
             gap(28),
             FilledButton(
-              onPressed: () {
+              onPressed: () async {
                 if (!form.currentState!.validate()) return;
                 if (step < 2) {
                   setState(() => step++);
                 } else {
-                  Navigator.pop(
-                    context,
+                  final messenger = ScaffoldMessenger.of(context);
+                  final navigator = Navigator.of(context);
+                  if (AppServices.instance.firebaseReady) {
+                    try {
+                      await AppServices.instance.createReport(
+                        report: {
+                          'name': name.text.trim(),
+                          'category': category,
+                          'place': location.text.trim(),
+                          'description': description.text.trim(),
+                          'type': widget.lost ? 'lost' : 'found',
+                        },
+                        photo: photo,
+                      );
+                    } on Object catch (error) {
+                      if (!mounted) return;
+                      messenger.showSnackBar(
+                        SnackBar(content: Text(error.toString())),
+                      );
+                      return;
+                    }
+                  }
+                  if (!mounted) return;
+                  navigator.pop(
                     Item(
                       name.text.trim(),
                       category,
@@ -1225,7 +1338,8 @@ class _DetailPageState extends State<DetailPage> {
 }
 
 class LocationPreview extends StatelessWidget {
-  const LocationPreview({super.key});
+  final Future<void> Function()? onUseCurrentLocation;
+  const LocationPreview({super.key, this.onUseCurrentLocation});
   @override
   Widget build(BuildContext context) => ClipRRect(
     borderRadius: BorderRadius.circular(22),
@@ -1234,7 +1348,7 @@ class LocationPreview extends StatelessWidget {
       width: double.infinity,
       child: CustomPaint(
         painter: MapPainter(),
-        child: const Stack(
+        child: Stack(
           children: [
             Positioned(
               left: 40,
@@ -1258,6 +1372,19 @@ class LocationPreview extends StatelessWidget {
               bottom: 50,
               child: Icon(Icons.location_on, color: green, size: 42),
             ),
+            if (onUseCurrentLocation != null)
+              Positioned(
+                right: 12,
+                top: 12,
+                child: Builder(
+                  builder: (context) => IconButton(
+                    tooltip: 'Use current location',
+                    style: IconButton.styleFrom(backgroundColor: Colors.white),
+                    onPressed: onUseCurrentLocation,
+                    icon: const Icon(Icons.my_location, color: purple),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

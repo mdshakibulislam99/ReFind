@@ -22,6 +22,37 @@ flutter test
 flutter build web
 ```
 
+## Device integrations
+
+The frontend now contains real integration boundaries for Firebase
+authentication, Firestore reports, Storage photos, Firebase Messaging,
+camera/gallery access, and location permissions. Firebase remains disabled
+until configuration is supplied; no credentials belong in this repository.
+
+Install the FlutterFire CLI and configure a Firebase project:
+
+```sh
+dart pub global activate flutterfire_cli
+flutterfire configure
+```
+
+Alternatively, run with the Firebase values supplied by your secret manager:
+
+```sh
+flutter run \
+  --dart-define=FIREBASE_API_KEY=... \
+  --dart-define=FIREBASE_APP_ID=... \
+  --dart-define=FIREBASE_MESSAGING_SENDER_ID=... \
+  --dart-define=FIREBASE_PROJECT_ID=... \
+  --dart-define=FIREBASE_STORAGE_BUCKET=...
+```
+
+Enable Email/Password Authentication, Firestore, Storage, and Cloud
+Messaging in the Firebase console. Add Google Maps Android and iOS API keys
+to the native Google Maps setup before enabling interactive map tiles. The
+app already requests camera, photo, location, and notification permissions;
+the user must grant them on the device.
+
 ## Explore
 
 Start with onboarding or continue as a guest. Create a lost/found report, open it from Reports, and mark it recovered. Search the community feed or filter by lost/found. Explore the manual route and photo matching entry point.

@@ -4,6 +4,12 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>ReFind uses the camera to add a photo to a lost or found item report.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>ReFind uses your photos to add details to a lost or found item report.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>ReFind uses your location to help select where an item was lost or found.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
