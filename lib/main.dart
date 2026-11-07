@@ -375,23 +375,21 @@ class _AuthPageState extends State<AuthPage> {
                   go(context, const PermissionsPage());
                 }
               },
-              child: Text(
-                widget.register ? 'Create demo account' : 'Enter demo',
-              ),
+              child: Text(widget.register ? 'Create account' : 'Log in'),
             ),
           ],
         ),
       ),
       gap(),
       const Text(
-        'Prototype only • No account is created and credentials are not sent or saved.',
+        'Accounts and secure sign-in will be connected when the backend is added.',
         textAlign: TextAlign.center,
         style: TextStyle(color: muted, fontSize: 12),
       ),
       gap(),
       OutlinedButton(
         onPressed: () => go(context, const PermissionsPage()),
-        child: const Text('Explore the demo without an account'),
+        child: const Text('Continue as a guest'),
       ),
       TextButton(
         onPressed: () => go(context, AuthPage(register: !widget.register)),
@@ -450,7 +448,7 @@ class PermissionsPage extends StatelessWidget {
           MaterialPageRoute<void>(builder: (_) => const Home()),
           (_) => false,
         ),
-        child: const Text('Continue to demo'),
+        child: const Text('Continue'),
       ),
     ]),
   );
@@ -485,27 +483,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   int tab = 0;
   String query = '', filter = 'All';
-  final items = [
-    Item(
-      'Everyday backpack',
-      'Bags',
-      'Central Library',
-      'Black backpack with a small front pocket. Found near the reading room.',
-    ),
-    Item(
-      'Wireless headphones',
-      'Electronics',
-      'Riverside Park',
-      'Cream headphones in a carrying case.',
-      lost: true,
-    ),
-    Item(
-      'House keys',
-      'Keys',
-      'Campus Café',
-      'Three keys with a blue keyring.',
-    ),
-  ];
+  final items = <Item>[];
   Future<void> report(bool lost) async {
     final item = await Navigator.of(
       context,
@@ -541,13 +519,13 @@ class _HomeState extends State<Home> {
         ),
         actions: [
           IconButton(
-            tooltip: 'About this demo',
+            tooltip: 'About ReFind',
             onPressed: () => showDialog<void>(
               context: context,
               builder: (_) => AlertDialog(
-                title: const Text('Your ReFind prototype'),
+                title: const Text('About ReFind'),
                 content: const Text(
-                  'Browse sample reports and create your own reports for this session. Authentication, maps, uploads, messaging and AI matching need live services before release.',
+                  'Create a report when you lose or find an item. Backend services will add accounts, live locations, photos, messaging and notifications.',
                 ),
                 actions: [
                   TextButton(
@@ -647,7 +625,7 @@ class _HomeState extends State<Home> {
                     ),
                   ),
                   const Text(
-                    'DEMO',
+                    'LIVE FEED',
                     style: TextStyle(
                       fontSize: 10,
                       letterSpacing: 2,
@@ -697,7 +675,7 @@ class _HomeState extends State<Home> {
                         ),
                       ),
                       const Text(
-                        'Explore how photo matching will help you find a possible match.',
+                        'Photo matching will help you find a possible match once image services are connected.',
                         style: TextStyle(color: muted),
                       ),
                       gap(12),
@@ -848,10 +826,10 @@ class _HomeState extends State<Home> {
       'Find your way back.',
       'Plan where to look with a location or a route.',
     ),
-    const DemoMap(),
+    const LocationPreview(),
     gap(),
     const Text(
-      'Illustrative map • No live location or distance data',
+      'Add a place manually now. Live location and distance data will be connected later.',
       style: TextStyle(color: muted, fontSize: 12),
     ),
     gap(),
@@ -867,13 +845,13 @@ class _HomeState extends State<Home> {
           title: 'Location services',
           icon: Icons.location_on_outlined,
           message:
-              'GPS is not connected in this prototype. You can enter a location manually when reporting an item.',
+              'You can enter a location manually now. Device location will be connected when the backend and permissions flow are added.',
         ),
       ),
       child: const Text('About GPS'),
     ),
     gap(24),
-    heading('Places in the demo'),
+    heading('Reported places'),
     for (final i in items)
       ListTile(
         leading: const Icon(Icons.place_outlined, color: purple),
@@ -898,7 +876,7 @@ class _HomeState extends State<Home> {
             'ReFind Explorer',
             style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800),
           ),
-          Text('Demo profile', style: TextStyle(color: muted)),
+          Text('Guest account', style: TextStyle(color: muted)),
         ],
       ),
     ),
@@ -1060,17 +1038,17 @@ class _ReportPageState extends State<ReportPage> {
                     (v ?? '').trim().isEmpty ? 'Enter a location' : null,
               ),
               gap(),
-              const DemoMap(),
+              const LocationPreview(),
               gap(12),
               const Text(
-                'Illustrative map. Your typed location is saved with this report.',
+                'Your typed location will be saved with this report.',
                 style: TextStyle(color: muted, fontSize: 12),
               ),
             ],
             if (step == 2) ...[
               heading(
                 'Ready to share?',
-                'Check the details before adding your demo report.',
+                'Check the details before publishing your report.',
               ),
               panel(
                 Column(
@@ -1098,7 +1076,7 @@ class _ReportPageState extends State<ReportPage> {
               ),
               gap(),
               const Text(
-                'Reports are stored in memory for this demo and reset when the app restarts. Nothing is published online.',
+                'Reports are currently kept in this app session. Publishing and persistence will be connected to the backend.',
                 style: TextStyle(color: muted),
               ),
             ],
@@ -1122,7 +1100,7 @@ class _ReportPageState extends State<ReportPage> {
                   );
                 }
               },
-              child: Text(step == 2 ? 'Add demo report' : 'Continue  →'),
+              child: Text(step == 2 ? 'Publish report' : 'Continue  →'),
             ),
             if (step > 0)
               TextButton(
@@ -1189,7 +1167,7 @@ class _DetailPageState extends State<DetailPage> {
                 title: 'Start a conversation',
                 icon: Icons.forum_outlined,
                 message:
-                    'Private messaging will connect you with the reporter once the backend is ready. This sample report has no real contact attached.',
+                    'Private messaging will connect you with the reporter when the backend is connected.',
               ),
             ),
             child: Text(
@@ -1204,7 +1182,7 @@ class _DetailPageState extends State<DetailPage> {
                 builder: (c) => AlertDialog(
                   title: const Text('Has this item been returned?'),
                   content: const Text(
-                    'Confirm the reunion to close your demo report.',
+                    'Confirm the reunion to close your report.',
                   ),
                   actions: [
                     TextButton(
@@ -1246,8 +1224,8 @@ class _DetailPageState extends State<DetailPage> {
   }
 }
 
-class DemoMap extends StatelessWidget {
-  const DemoMap({super.key});
+class LocationPreview extends StatelessWidget {
+  const LocationPreview({super.key});
   @override
   Widget build(BuildContext context) => ClipRRect(
     borderRadius: BorderRadius.circular(22),
@@ -1262,7 +1240,7 @@ class DemoMap extends StatelessWidget {
               left: 40,
               top: 25,
               child: Text(
-                'ILLUSTRATIVE MAP',
+                'LOCATION PREVIEW',
                 style: TextStyle(
                   color: muted,
                   fontSize: 10,
@@ -1365,7 +1343,7 @@ class _RoutePageState extends State<RoutePage> {
         ),
       ),
       gap(),
-      const DemoMap(),
+      const LocationPreview(),
       gap(),
       const Text(
         'Route preview is illustrative. Live directions and distances are not connected.',
@@ -1399,69 +1377,31 @@ class MatchingPage extends StatefulWidget {
 }
 
 class _MatchingPageState extends State<MatchingPage> {
-  bool loading = false, results = false;
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Image matching')),
     body: pageBody([
       heading(
         'A familiar look.',
-        'A preview of how photo-assisted discovery will work.',
+        'Upload a photo to find reports with similar details.',
       ),
       Center(child: symbol(Icons.image_search_rounded, size: 160)),
       gap(24),
       const Text(
-        'Demo only: uses a sample backpack. No image is uploaded or analyzed.',
+        'Choose an image to find possible matches. Uploading and image analysis will be connected to the backend.',
         textAlign: TextAlign.center,
         style: TextStyle(color: muted),
       ),
       gap(24),
-      if (loading)
-        const Center(child: CircularProgressIndicator())
-      else
-        FilledButton(
-          onPressed: () async {
-            setState(() {
-              loading = true;
-              results = false;
-            });
-            await Future<void>.delayed(const Duration(milliseconds: 700));
-            if (mounted)
-              setState(() {
-                loading = false;
-                results = true;
-              });
-          },
-          child: const Text('Preview sample results'),
-        ),
-      if (results) ...[
-        gap(28),
-        heading('Sample result'),
-        panel(
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(
-              Icons.backpack_outlined,
-              size: 42,
-              color: purple,
-            ),
-            title: const Text('Everyday backpack'),
-            subtitle: const Text('Central Library · Sample report'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => go(
-              context,
-              DetailPage(
-                item: Item(
-                  'Everyday backpack',
-                  'Bags',
-                  'Central Library',
-                  'Black backpack with a small front pocket.',
-                ),
-              ),
-            ),
+      FilledButton.icon(
+        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Photo selection will be connected to the backend.'),
           ),
         ),
-      ],
+        icon: const Icon(Icons.add_photo_alternate_outlined),
+        label: const Text('Choose an image'),
+      ),
     ]),
   );
 }
@@ -1508,7 +1448,9 @@ class _SettingsPageState extends State<SettingsPage> {
       SwitchListTile(
         contentPadding: EdgeInsets.zero,
         title: const Text('Match notification preference'),
-        subtitle: const Text('Demo preference only; resets when you leave.'),
+        subtitle: const Text(
+          'Choose whether to receive possible match alerts.',
+        ),
         value: notifications,
         onChanged: (v) => setState(() => notifications = v),
       ),
@@ -1526,7 +1468,7 @@ class _SettingsPageState extends State<SettingsPage> {
       gap(28),
       panel(
         const Text(
-          'ReFind 1.0 · UI prototype\nLive accounts, persistent storage, photos, GPS, messaging and image matching are planned integrations.',
+          'ReFind 1.0\nAccounts, persistence, photos, GPS, messaging and image matching will be connected to the backend.',
         ),
       ),
     ]),

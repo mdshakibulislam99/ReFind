@@ -66,8 +66,8 @@ void main() {
     await tester.tap(find.text('Continue  →'));
     await tester.pumpAndSettle();
     expect(find.text('Blue backpack'), findsOneWidget);
-    await reveal(tester, find.text('Add demo report'));
-    await tester.tap(find.text('Add demo report'));
+    await reveal(tester, find.text('Publish report'));
+    await tester.tap(find.text('Publish report'));
     await tester.pumpAndSettle();
     expect(result?.name, 'Blue backpack');
     expect(result?.place, 'City library');

@@ -1,6 +1,6 @@
 # ReFind
 
-A Flutter/Dart lost-and-found UI prototype, based on the supplied ReFind screen reference. Includes Android, iOS and web project targets.
+A Flutter/Dart lost-and-found frontend for Android, iOS and web.
 
 ## Run
 
@@ -24,11 +24,11 @@ flutter build web
 
 ## Explore
 
-Start with onboarding or use Log in → Explore the demo without an account. Create a lost/found report, open it from Reports, and mark it recovered. Search the home feed or filter by lost/found. Explore the manual route and sample matching previews.
+Start with onboarding or continue as a guest. Create a lost/found report, open it from Reports, and mark it recovered. Search the community feed or filter by lost/found. Explore the manual route and photo matching entry point.
 
 ## Scope
 
-This is an interactive UI foundation, not a production lost-and-found service. Reports live only in memory. Account screens validate locally; they do not authenticate. Maps are illustrations. Photo uploads, GPS, notifications, private messaging and AI matching need live integrations. No credentials or reports are transmitted.
+This frontend is ready for backend integration. Reports are currently held in local app state. Account forms validate locally but do not authenticate yet. Locations are entered manually, while photo uploads, GPS, notifications, private messaging and image matching are integration points for the backend. No credentials or reports are transmitted.
 
 See [DESIGN.md](DESIGN.md) for screen flows, visual decisions and the production integration plan.
 
@@ -37,10 +37,9 @@ Flutter uses **Dart** for the app. Python is a good optional choice for a later 
 ## Validation from this implementation
 
 - Flutter analyzer: no issues.
-- Three interaction tests passed: onboarding, report validation/creation, and search/report navigation.
+- Interaction tests cover onboarding, report validation/creation, and search/report navigation.
 - Four phone screens rendered and inspected at 390 × 844; see `docs/previews/`.
 - Browser compilation was not completed: the first-time Flutter web SDK download was interrupted after slow progress. Android/iOS device builds were not run.
-- Flutter SDK used in this session: `/private/tmp/refind-flutter-sdk` (temporary installation; install Flutter permanently for continued development).
 
 To regenerate the visual previews on macOS:
 
