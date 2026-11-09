@@ -32,6 +32,8 @@ void main() {
   testWidgets('Report validates required fields and returns entered item', (
     tester,
   ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     Item? result;
     await tester.pumpWidget(
       MaterialApp(

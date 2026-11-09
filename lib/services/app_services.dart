@@ -53,7 +53,7 @@ class AppServices {
 
   Future<String> createReport({
     required Map<String, Object?> report,
-    XFile? photo,
+    List<XFile> photos = const [],
   }) async {
     _requireFirebase();
     final user = FirebaseAuth.instance.currentUser;
@@ -67,10 +67,16 @@ class AppServices {
       'createdAt': FieldValue.serverTimestamp(),
       'status': 'open',
     };
-    if (photo != null) {
-      final ref = FirebaseStorage.instance.ref('reports/${document.id}/photo');
-      await ref.putData(await photo.readAsBytes());
-      payload = {...payload, 'photoUrl': await ref.getDownloadURL()};
+    if (photos.isNotEmpty) {
+      final photoUrls = <String>[];
+      for (var index = 0; index < photos.length; index++) {
+        final ref = FirebaseStorage.instance.ref(
+          'reports/${document.id}/photo_$index',
+        );
+        await ref.putData(await photos[index].readAsBytes());
+        photoUrls.add(await ref.getDownloadURL());
+      }
+      payload = {...payload, 'photoUrls': photoUrls};
     }
     await document.set(payload);
     return document.id;
@@ -104,6 +110,10 @@ class AppServices {
 
   Future<XFile?> choosePhoto(ImageSource source) {
     return picker.pickImage(source: source, imageQuality: 85);
+  }
+
+  Future<List<XFile>> choosePhotos() {
+    return picker.pickMultiImage(imageQuality: 85, limit: 6);
   }
 
   void _requireFirebase() {

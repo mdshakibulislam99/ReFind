@@ -38,6 +38,8 @@ The frontend now contains real integration boundaries for Firebase
 authentication, Firestore reports, Storage photos, Firebase Messaging,
 camera/gallery access, and location permissions. Firebase remains disabled
 until configuration is supplied; no credentials belong in this repository.
+Reports support selecting up to six photos from the gallery, with previews and
+individual removal before publishing.
 
 Install the FlutterFire CLI and configure a Firebase project:
 

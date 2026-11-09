@@ -970,8 +970,8 @@ class _ReportPageState extends State<ReportPage> {
   final name = TextEditingController(),
       description = TextEditingController(),
       location = TextEditingController();
-  XFile? photo;
-  Uint8List? photoBytes;
+  final photos = <XFile>[];
+  final photoBytes = <Uint8List>[];
   String category = 'Bags';
   int step = 0;
   @override
@@ -988,30 +988,44 @@ class _ReportPageState extends State<ReportPage> {
     final bytes = await selected.readAsBytes();
     if (!mounted) return;
     setState(() {
-      photo = selected;
-      photoBytes = bytes;
+      if (photos.length < 6) {
+        photos.add(selected);
+        photoBytes.add(bytes);
+      }
     });
   }
 
-  Widget _photoPreview({required double height, required double width}) {
+  Future<void> selectPhotos() async {
+    final selected = await AppServices.instance.choosePhotos();
+    if (!mounted || selected.isEmpty) return;
+    final remaining = 6 - photos.length;
+    final additions = selected.take(remaining).toList();
+    final bytes = await Future.wait(
+      additions.map((photo) => photo.readAsBytes()),
+    );
+    if (!mounted) return;
+    setState(() {
+      photos.addAll(additions);
+      photoBytes.addAll(bytes);
+    });
+  }
+
+  Widget _photoPreview(
+    int index, {
+    required double height,
+    required double width,
+  }) {
     if (kIsWeb) {
       return Image.network(
-        photo!.path,
+        photos[index].path,
         height: height,
         width: width,
         fit: BoxFit.cover,
         errorBuilder: (_, error, _) => _photoError(error),
       );
     }
-    if (photoBytes == null) {
-      return SizedBox(
-        height: height,
-        width: width,
-        child: const Center(child: CircularProgressIndicator()),
-      );
-    }
     return Image.memory(
-      photoBytes!,
+      photoBytes[index],
       height: height,
       width: width,
       fit: BoxFit.cover,
@@ -1107,31 +1121,47 @@ class _ReportPageState extends State<ReportPage> {
                       'Add a photo',
                       style: TextStyle(fontWeight: FontWeight.w800),
                     ),
-                    gap(6),
+                    gap(4),
                     Text(
-                      photo == null
-                          ? 'Add a clear photo to help identify the item.'
-                          : 'Photo selected: ${photo!.name}',
+                      photos.isEmpty
+                          ? 'Up to 6 photos can be added.'
+                          : '${photos.length}/6 photos selected',
                       style: const TextStyle(color: muted),
                     ),
-                    if (photo != null) ...[
+                    if (photos.isNotEmpty) ...[
                       gap(12),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(14),
-                        child: _photoPreview(
-                          height: 190,
-                          width: double.infinity,
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton.icon(
-                          onPressed: () => setState(() {
-                            photo = null;
-                            photoBytes = null;
-                          }),
-                          icon: const Icon(Icons.delete_outline),
-                          label: const Text('Remove photo'),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: List.generate(
+                          photos.length,
+                          (index) => Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(14),
+                                child: _photoPreview(
+                                  index,
+                                  height: 120,
+                                  width: 120,
+                                ),
+                              ),
+                              Positioned(
+                                top: 4,
+                                right: 4,
+                                child: IconButton(
+                                  onPressed: () => setState(() {
+                                    photos.removeAt(index);
+                                    photoBytes.removeAt(index);
+                                  }),
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: const Color(0xFFE3546B),
+                                  ),
+                                  icon: const Icon(Icons.close, size: 18),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -1148,10 +1178,10 @@ class _ReportPageState extends State<ReportPage> {
                         ),
                         OutlinedButton.icon(
                           onPressed: () async {
-                            await selectPhoto(ImageSource.gallery);
+                            await selectPhotos();
                           },
                           icon: const Icon(Icons.photo_library_outlined),
-                          label: const Text('Photos'),
+                          label: const Text('Photos (up to 6)'),
                         ),
                       ],
                     ),
@@ -1226,13 +1256,21 @@ class _ReportPageState extends State<ReportPage> {
                           ? 'No additional details'
                           : description.text,
                     ),
-                    if (photo != null) ...[
+                    if (photos.isNotEmpty) ...[
                       gap(),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(14),
-                        child: _photoPreview(
-                          height: 160,
-                          width: double.infinity,
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: List.generate(
+                          photos.length,
+                          (index) => ClipRRect(
+                            borderRadius: BorderRadius.circular(14),
+                            child: _photoPreview(
+                              index,
+                              height: 100,
+                              width: 100,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -1264,7 +1302,7 @@ class _ReportPageState extends State<ReportPage> {
                           'description': description.text.trim(),
                           'type': widget.lost ? 'lost' : 'found',
                         },
-                        photo: photo,
+                        photos: photos,
                       );
                     } on Object catch (error) {
                       if (!mounted) return;
