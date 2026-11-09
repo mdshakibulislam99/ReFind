@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'services/app_services.dart';
@@ -970,6 +972,7 @@ class _ReportPageState extends State<ReportPage> {
       description = TextEditingController(),
       location = TextEditingController();
   XFile? photo;
+  Uint8List? photoBytes;
   String category = 'Bags';
   int step = 0;
   @override
@@ -978,6 +981,17 @@ class _ReportPageState extends State<ReportPage> {
     description.dispose();
     location.dispose();
     super.dispose();
+  }
+
+  Future<void> selectPhoto(ImageSource source) async {
+    final selected = await AppServices.instance.choosePhoto(source);
+    if (selected == null || !mounted) return;
+    final bytes = await selected.readAsBytes();
+    if (!mounted) return;
+    setState(() {
+      photo = selected;
+      photoBytes = bytes;
+    });
   }
 
   @override
@@ -1063,28 +1077,43 @@ class _ReportPageState extends State<ReportPage> {
                           : 'Photo selected: ${photo!.name}',
                       style: const TextStyle(color: muted),
                     ),
+                    if (photoBytes != null) ...[
+                      gap(12),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: Image.memory(
+                          photoBytes!,
+                          height: 190,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: () => setState(() {
+                            photo = null;
+                            photoBytes = null;
+                          }),
+                          icon: const Icon(Icons.delete_outline),
+                          label: const Text('Remove photo'),
+                        ),
+                      ),
+                    ],
                     gap(8),
                     Wrap(
                       spacing: 8,
                       children: [
                         OutlinedButton.icon(
                           onPressed: () async {
-                            final selected = await AppServices.instance
-                                .choosePhoto(ImageSource.camera);
-                            if (selected != null && mounted) {
-                              setState(() => photo = selected);
-                            }
+                            await selectPhoto(ImageSource.camera);
                           },
                           icon: const Icon(Icons.camera_alt_outlined),
                           label: const Text('Camera'),
                         ),
                         OutlinedButton.icon(
                           onPressed: () async {
-                            final selected = await AppServices.instance
-                                .choosePhoto(ImageSource.gallery);
-                            if (selected != null && mounted) {
-                              setState(() => photo = selected);
-                            }
+                            await selectPhoto(ImageSource.gallery);
                           },
                           icon: const Icon(Icons.photo_library_outlined),
                           label: const Text('Photos'),
@@ -1162,6 +1191,18 @@ class _ReportPageState extends State<ReportPage> {
                           ? 'No additional details'
                           : description.text,
                     ),
+                    if (photoBytes != null) ...[
+                      gap(),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: Image.memory(
+                          photoBytes!,
+                          height: 160,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
