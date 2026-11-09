@@ -10,7 +10,8 @@ The quickest way to start the local web app is:
 npm run dev
 ```
 
-Then open http://localhost:8080. Stop the server with `Ctrl+C`.
+Then open http://localhost:8080. The command loads the Web AMap key and
+security code from `.env.local` when present. Stop the server with `Ctrl+C`.
 
 The equivalent Flutter commands are:
 
@@ -72,15 +73,40 @@ choose an exact point. Keep the keys out of Git and provide them at runtime:
 ```sh
 export AMAP_ANDROID_KEY='your-android-key'
 export AMAP_IOS_KEY='your-ios-key'
+export AMAP_WEB_KEY='your-web-js-key'
+export AMAP_WEB_SECURITY_CODE='your-web-security-code'
+export FLUTTER_DEVICE='device-id'
 flutter run -d <android-or-ios-device> \
   --dart-define=AMAP_ANDROID_KEY="$AMAP_ANDROID_KEY" \
-  --dart-define=AMAP_IOS_KEY="$AMAP_IOS_KEY"
+  --dart-define=AMAP_IOS_KEY="$AMAP_IOS_KEY" \
+  --dart-define=AMAP_WEB_KEY="$AMAP_WEB_KEY" \
+  --dart-define=AMAP_WEB_SECURITY_CODE="$AMAP_WEB_SECURITY_CODE"
 ```
 
+Or create `.env.local` in the project root:
+
+```env
+AMAP_ANDROID_KEY=your-android-key
+AMAP_IOS_KEY=your-ios-key
+AMAP_WEB_KEY=your-web-js-key
+AMAP_WEB_SECURITY_CODE=your-web-security-code
+FLUTTER_DEVICE=your-device-id
+```
+
+Then run:
+
+```sh
+npm run dev:amap
+```
+
+`.env.local` is ignored by Git and must never be committed.
+
 The app already requests camera, photo, location, and notification
-permissions; the user must grant them on the device. Web uses the manual
-location/current-location fallback because this AMap Flutter plugin targets
-Android and iOS.
+permissions; the user must grant them on the device. Web loads AMap JS with
+the Web JS key, uses browser geolocation for the initial position, and lets
+the user tap the map to select coordinates. Native Android and iOS use the
+AMap Flutter plugin. If AMap provides a Web security JS code for your key,
+set `AMAP_WEB_SECURITY_CODE` as shown above.
 
 ## Explore
 

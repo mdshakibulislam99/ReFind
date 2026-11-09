@@ -4,6 +4,8 @@ import 'package:amap_map/amap_map.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:x_amap_base/x_amap_base.dart';
 import 'services/app_services.dart';
+import 'services/amap_web_picker_stub.dart'
+    if (dart.library.html) 'services/amap_web_picker_web.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1519,21 +1521,7 @@ class LocationPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (kIsWeb) {
-      return LocationPreview(
-        onUseCurrentLocation: () async {
-          try {
-            final position = await AppServices.instance.currentLocation();
-            onSelected(
-              '${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}',
-            );
-          } on Object catch (error) {
-            if (!context.mounted) return;
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(error.toString())));
-          }
-        },
-      );
+      return buildAmapWebPicker(onSelected: onSelected);
     }
     return SizedBox(
       height: 300,
