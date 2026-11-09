@@ -1,5 +1,4 @@
-import 'dart:typed_data';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'services/app_services.dart';
@@ -994,6 +993,44 @@ class _ReportPageState extends State<ReportPage> {
     });
   }
 
+  Widget _photoPreview({required double height, required double width}) {
+    if (kIsWeb) {
+      return Image.network(
+        photo!.path,
+        height: height,
+        width: width,
+        fit: BoxFit.cover,
+        errorBuilder: (_, error, _) => _photoError(error),
+      );
+    }
+    if (photoBytes == null) {
+      return SizedBox(
+        height: height,
+        width: width,
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+    return Image.memory(
+      photoBytes!,
+      height: height,
+      width: width,
+      fit: BoxFit.cover,
+      errorBuilder: (_, error, _) => _photoError(error),
+    );
+  }
+
+  Widget _photoError(Object error) => Container(
+    height: 100,
+    color: const Color(0xFFFFECEE),
+    alignment: Alignment.center,
+    padding: const EdgeInsets.all(12),
+    child: Text(
+      'Unable to display this photo: $error',
+      textAlign: TextAlign.center,
+      style: const TextStyle(color: Color(0xFFE3546B)),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
@@ -1077,15 +1114,13 @@ class _ReportPageState extends State<ReportPage> {
                           : 'Photo selected: ${photo!.name}',
                       style: const TextStyle(color: muted),
                     ),
-                    if (photoBytes != null) ...[
+                    if (photo != null) ...[
                       gap(12),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(14),
-                        child: Image.memory(
-                          photoBytes!,
+                        child: _photoPreview(
                           height: 190,
                           width: double.infinity,
-                          fit: BoxFit.cover,
                         ),
                       ),
                       Align(
@@ -1191,15 +1226,13 @@ class _ReportPageState extends State<ReportPage> {
                           ? 'No additional details'
                           : description.text,
                     ),
-                    if (photoBytes != null) ...[
+                    if (photo != null) ...[
                       gap(),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(14),
-                        child: Image.memory(
-                          photoBytes!,
+                        child: _photoPreview(
                           height: 160,
                           width: double.infinity,
-                          fit: BoxFit.cover,
                         ),
                       ),
                     ],
