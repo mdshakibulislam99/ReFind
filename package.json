@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "flutter pub get && flutter run -d web-server --web-port 8080",
+    "dev:amap": "flutter pub get && flutter run -d $FLUTTER_DEVICE --dart-define=AMAP_ANDROID_KEY=$AMAP_ANDROID_KEY --dart-define=AMAP_IOS_KEY=$AMAP_IOS_KEY",
     "dev:chrome": "flutter pub get && flutter run -d chrome",
     "analyze": "flutter analyze",
     "test": "flutter test",

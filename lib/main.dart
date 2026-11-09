@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:amap_map/amap_map.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:x_amap_base/x_amap_base.dart';
 import 'services/app_services.dart';
 
 Future<void> main() async {
@@ -17,56 +19,74 @@ const green = Color(0xFF00B98B);
 class ReFindApp extends StatelessWidget {
   const ReFindApp({super.key});
   @override
-  Widget build(BuildContext context) => MaterialApp(
-    title: 'ReFind',
-    debugShowCheckedModeBanner: false,
-    theme: ThemeData(
-      useMaterial3: true,
-      scaffoldBackgroundColor: const Color(0xFFF8F9FF),
-      colorScheme: ColorScheme.fromSeed(seedColor: purple),
-      textTheme: const TextTheme(
-        headlineLarge: TextStyle(
-          fontSize: 34,
-          fontWeight: FontWeight.w800,
-          color: ink,
+  Widget build(BuildContext context) {
+    if (!kIsWeb) {
+      AMapInitializer.init(
+        context,
+        apiKey: const AMapApiKey(
+          androidKey: String.fromEnvironment('AMAP_ANDROID_KEY'),
+          iosKey: String.fromEnvironment('AMAP_IOS_KEY'),
         ),
-        headlineSmall: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w800,
-          color: ink,
+      );
+      AMapInitializer.updatePrivacyAgree(
+        const AMapPrivacyStatement(
+          hasContains: true,
+          hasShow: true,
+          hasAgree: true,
         ),
-        bodyMedium: TextStyle(color: ink, height: 1.5),
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFFF8F9FF),
-        foregroundColor: ink,
-        centerTitle: false,
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFE3E5F1)),
+      );
+    }
+    return MaterialApp(
+      title: 'ReFind',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFF8F9FF),
+        colorScheme: ColorScheme.fromSeed(seedColor: purple),
+        textTheme: const TextTheme(
+          headlineLarge: TextStyle(
+            fontSize: 34,
+            fontWeight: FontWeight.w800,
+            color: ink,
+          ),
+          headlineSmall: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w800,
+            color: ink,
+          ),
+          bodyMedium: TextStyle(color: ink, height: 1.5),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFE3E5F1)),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFFF8F9FF),
+          foregroundColor: ink,
+          centerTitle: false,
         ),
-      ),
-      filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          backgroundColor: purple,
-          foregroundColor: Colors.white,
-          minimumSize: const Size(double.infinity, 54),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFFE3E5F1)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFFE3E5F1)),
+          ),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            backgroundColor: purple,
+            foregroundColor: Colors.white,
+            minimumSize: const Size(double.infinity, 54),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
           ),
         ),
       ),
-    ),
-    home: const Welcome(),
-  );
+      home: const Welcome(),
+    );
+  }
 }
 
 void go(BuildContext c, Widget page) =>
@@ -1206,22 +1226,10 @@ class _ReportPageState extends State<ReportPage> {
                     (v ?? '').trim().isEmpty ? 'Enter a location' : null,
               ),
               gap(),
-              LocationPreview(
-                onUseCurrentLocation: () async {
-                  final messenger = ScaffoldMessenger.of(context);
-                  try {
-                    final position = await AppServices.instance
-                        .currentLocation();
-                    if (!mounted) return;
-                    location.text =
-                        '${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}';
-                    setState(() {});
-                  } on Object catch (error) {
-                    if (!mounted) return;
-                    messenger.showSnackBar(
-                      SnackBar(content: Text(error.toString())),
-                    );
-                  }
+              LocationPicker(
+                onSelected: (value) {
+                  location.text = value;
+                  setState(() {});
                 },
               ),
               gap(12),
@@ -1502,6 +1510,48 @@ class LocationPreview extends StatelessWidget {
       ),
     ),
   );
+}
+
+class LocationPicker extends StatelessWidget {
+  final ValueChanged<String> onSelected;
+  const LocationPicker({super.key, required this.onSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    if (kIsWeb) {
+      return LocationPreview(
+        onUseCurrentLocation: () async {
+          try {
+            final position = await AppServices.instance.currentLocation();
+            onSelected(
+              '${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}',
+            );
+          } on Object catch (error) {
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(error.toString())));
+          }
+        },
+      );
+    }
+    return SizedBox(
+      height: 300,
+      child: AMapWidget(
+        initialCameraPosition: const CameraPosition(
+          target: LatLng(39.909187, 116.397451),
+          zoom: 12,
+        ),
+        myLocationStyleOptions: MyLocationStyleOptions(true),
+        onTap: (point) => onSelected(
+          '${point.latitude.toStringAsFixed(6)}, ${point.longitude.toStringAsFixed(6)}',
+        ),
+        onLocationChanged: (value) => onSelected(
+          '${value.latLng.latitude.toStringAsFixed(6)}, ${value.latLng.longitude.toStringAsFixed(6)}',
+        ),
+      ),
+    );
+  }
 }
 
 class MapPainter extends CustomPainter {

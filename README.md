@@ -61,9 +61,26 @@ flutter run \
 
 Enable Email/Password Authentication, Firestore, Storage, and Cloud
 Messaging in the Firebase console. Add Google Maps Android and iOS API keys
-to the native Google Maps setup before enabling interactive map tiles. The
-app already requests camera, photo, location, and notification permissions;
-the user must grant them on the device.
+to the native Google Maps setup before enabling interactive map tiles.
+
+## AMap location picker
+
+On Android and iOS, the report location step uses AMap. It shows the device's
+current location after permission is granted and lets the user tap the map to
+choose an exact point. Keep the keys out of Git and provide them at runtime:
+
+```sh
+export AMAP_ANDROID_KEY='your-android-key'
+export AMAP_IOS_KEY='your-ios-key'
+flutter run -d <android-or-ios-device> \
+  --dart-define=AMAP_ANDROID_KEY="$AMAP_ANDROID_KEY" \
+  --dart-define=AMAP_IOS_KEY="$AMAP_IOS_KEY"
+```
+
+The app already requests camera, photo, location, and notification
+permissions; the user must grant them on the device. Web uses the manual
+location/current-location fallback because this AMap Flutter plugin targets
+Android and iOS.
 
 ## Explore
 
