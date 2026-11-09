@@ -1,0 +1,11 @@
+{
+  "name": "refind",
+  "private": true,
+  "scripts": {
+    "dev": "flutter pub get && flutter run -d web-server --web-port 8080",
+    "dev:chrome": "flutter pub get && flutter run -d chrome",
+    "analyze": "flutter analyze",
+    "test": "flutter test",
+    "build": "flutter build web"
+  }
+}

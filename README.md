@@ -4,6 +4,16 @@ A Flutter/Dart lost-and-found frontend for Android, iOS and web.
 
 ## Run
 
+The quickest way to start the local web app is:
+
+```sh
+npm run dev
+```
+
+Then open http://localhost:8080. Stop the server with `Ctrl+C`.
+
+The equivalent Flutter commands are:
+
 Install the stable Flutter SDK, then from this directory:
 
 ```sh
